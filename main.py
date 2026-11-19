@@ -22,7 +22,7 @@ class Window:
     def close(self):
         self.__running = False
 
-    def draw_line(self, line: Line, fill_color: str):
+    def draw_line(self, line: Line, fill_color: str = "black"):
         line.draw(self.canvas, fill_color=fill_color)
 
 class Point:
@@ -35,7 +35,7 @@ class Line:
         self.a_point = a_point
         self.b_point = b_point
 
-    def draw(self, canvas: Canvas, fill_color: str):
+    def draw(self, canvas: Canvas, fill_color: str = "black"):
         canvas.create_line(
             self.a_point.x, 
             self.a_point.y, 
@@ -45,34 +45,58 @@ class Line:
             width=2
             )
 
+class Cell:
+    def __init__(self, window: Window):
+        self.has_left_wall = True
+        self.has_right_wall = True
+        self.has_top_wall = True
+        self.has_bottom_wall = True
+        self.__x1 = -1.0
+        self.__x2 = -1.0
+        self.__y1 = -1.0
+        self.__y2 = -1.0
+        self.__win = window
+
+    def draw(self, x1: float, y1: float, x2: float, y2: float) -> None:
+        self.__x1 = x1
+        self.__x2 = x2
+        self.__y1 = y1
+        self.__y2 = y2
+
+        if self.has_left_wall:
+            line = Line(Point(x1, y1), Point(x1, y2))
+            self.__win.draw_line(line=line)
+
+        if self.has_right_wall:
+            line = Line(Point(x2, y1), Point(x2, y2))
+            self.__win.draw_line(line=line)
+        
+        if self.has_top_wall:
+            line = Line(Point(x1, y1), Point(x2, y1))
+            self.__win.draw_line(line=line)
+
+        if self.has_bottom_wall:
+            line = Line(Point(x1, y2), Point(x2, y2))
+            self.__win.draw_line(line=line)
+
 def main():
     win = Window(800, 600)
 
-    lines = [
-        Line(Point(50, 100), Point(50, 200)),
-        Line(Point(50, 100), Point(100, 100)),
-        Line(Point(50, 150), Point(90, 150)),
-        Line(Point(50, 200), Point(100, 200)),
+    c = Cell(win)
+    c.has_left_wall = False
+    c.draw(50, 50, 100, 100)
 
-        Line(Point(130, 100), Point(130, 200)),
-        Line(Point(130, 100), Point(180, 130)),
-        Line(Point(180, 130), Point(180, 170)),
-        Line(Point(180, 170), Point(130, 200)),
+    c = Cell(win)
+    c.has_right_wall = False
+    c.draw(125, 125, 200, 200)
 
-        Line(Point(210, 100), Point(210, 200)),
-        Line(Point(210, 100), Point(260, 100)),
-        Line(Point(210, 150), Point(250, 150)),
-        Line(Point(210, 200), Point(260, 200)),
+    c = Cell(win)
+    c.has_bottom_wall = False
+    c.draw(225, 225, 250, 250)
 
-        Line(Point(290, 100), Point(290, 200)),
-        Line(Point(290, 100), Point(340, 100)),
-        Line(Point(340, 100), Point(340, 150)),
-        Line(Point(340, 150), Point(290, 150)),
-        Line(Point(290, 150), Point(340, 200)),
-    ]
-
-    for line in lines:
-        win.draw_line(line, "black")
+    c = Cell(win)
+    c.has_top_wall = False
+    c.draw(300, 300, 500, 500)
 
     win.wait_for_close()
 
