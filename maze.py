@@ -50,7 +50,7 @@ class Maze:
 
         current_cell: Cell = self.__cells[i][j]
         current_cell_x1 = self.__x1 + (i * self.__cell_size_x)
-        current_cell_y1 = self.__y1 + (i * self.__cell_size_y)
+        current_cell_y1 = self.__y1 + (j * self.__cell_size_y)
         current_cell_x2 = current_cell_x1 + self.__cell_size_x
         current_cell_y2 = current_cell_y1 + self.__cell_size_y
 
