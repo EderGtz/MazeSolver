@@ -11,6 +11,15 @@ class Cell:
         self.__y1 = -1.0
         self.__y2 = -1.0
         self.__win = window
+        self.__visited = False
+
+    @property
+    def visited(self) -> bool:
+        return self.__visited
+
+    @visited.setter
+    def visited(self, visited: bool) -> None:
+        self.__visited = visited
 
     def draw(self, x1: float, y1: float, x2: float, y2: float) -> None:
         self.__x1 = x1
@@ -26,28 +35,28 @@ class Cell:
             self.__win.draw_line(line=line)
         else:
             line = Line(Point(x1, y1), Point(x1, y2))
-            self.__win.draw_line(line=line, fill_color="white")
+            self.__win.draw_line(line=line, fill_color="#d9d9d9")
 
         if self.has_right_wall:
             line = Line(Point(x2, y1), Point(x2, y2))
             self.__win.draw_line(line=line)
         else:
             line = Line(Point(x2, y1), Point(x2, y2))
-            self.__win.draw_line(line=line, fill_color="white")
+            self.__win.draw_line(line=line, fill_color="#d9d9d9")
         
         if self.has_top_wall:
             line = Line(Point(x1, y1), Point(x2, y1))
             self.__win.draw_line(line=line)
         else:
             line = Line(Point(x1, y1), Point(x2, y1))
-            self.__win.draw_line(line=line, fill_color="white")
+            self.__win.draw_line(line=line, fill_color="#d9d9d9")
 
         if self.has_bottom_wall:
             line = Line(Point(x1, y2), Point(x2, y2))
             self.__win.draw_line(line=line)
         else:
             line = Line(Point(x1, y2), Point(x2, y2))
-            self.__win.draw_line(line=line, fill_color="white")
+            self.__win.draw_line(line=line, fill_color="#d9d9d9")
 
     def draw_move(self, to_cell: Cell, undo: bool = False) -> None:
         """
