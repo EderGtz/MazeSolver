@@ -7,6 +7,7 @@ class Window:
         self.canvas = Canvas(self.__rootWidget,width=width, height=height)
         self.canvas.pack(fill=BOTH, expand=True)
         self.__running = False
+        self.__is_closed = False
         self.__rootWidget.protocol("WM_DELETE_WINDOW", self.close)
 
     def redraw(self):
@@ -15,12 +16,19 @@ class Window:
 
     def wait_for_close(self):
         self.__running = True
-        while self.__running:
+        while self.__running and not self.__is_closed:
             self.redraw()
         print("Window is closed")
 
     def close(self):
+        self.__is_closed = True
         self.__running = False
+
+    def is_closed(self) -> bool:
+        return self.__is_closed
+
+    def clear(self):
+        self.canvas.delete("all")
 
     def draw_line(self, line: Line, fill_color: str = "black"):
         line.draw(self.canvas, fill_color=fill_color)

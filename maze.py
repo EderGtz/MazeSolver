@@ -73,11 +73,11 @@ class Maze:
 
     def __animate(self) -> None:
 
-        if self.__win is None:
+        if self.__win is None or self.__win.is_closed():
             return
 
         self.__win.redraw()
-        time.sleep(0.05)
+        time.sleep(0.03)
 
     def __break_entrance_and_exit(self) -> None:
 
