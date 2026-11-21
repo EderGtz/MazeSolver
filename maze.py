@@ -77,7 +77,13 @@ class Maze:
             return
 
         self.__win.redraw()
-        time.sleep(0.03)
+
+        if self.__win.is_closed():
+            return
+
+        delay = self.__win.get_speed()
+        if delay > 0:
+            time.sleep(delay)
 
     def __break_entrance_and_exit(self) -> None:
 
