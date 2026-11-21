@@ -28,6 +28,7 @@ class Maze:
         self.__cells: list[list[Cell]] = []
         
         self.__create_cells()
+        self.__break_entrance_and_exit()
 
     def __create_cells(self) -> None:
         #          cols rows
@@ -70,3 +71,13 @@ class Maze:
 
         self.__win.redraw()
         time.sleep(0.05)
+
+    def __break_entrance_and_exit(self) -> None:
+
+        first_cell = self.__cells[0][0]
+        first_cell.has_top_wall = False
+        self.__draw_cell(0,0)
+
+        last_cell = self.__cells[self.__num_cols - 1][self.__num_rows - 1]
+        last_cell.has_bottom_wall = False
+        self.__draw_cell(self.__num_cols - 1, self.__num_rows - 1)
