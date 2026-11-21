@@ -1,10 +1,16 @@
 """
 Hold all the cells in the maze in a 2-dimensional grid as a list of lists
 """
+from collections import deque
 from graphics import Window
 from cell import Cell
 import time
 import random
+
+
+class MazeInterrupted(Exception):
+    """Raised when the user requests a new maze before this one finishes."""
+
 
 class Maze:
 
@@ -18,6 +24,7 @@ class Maze:
             cell_size_y: float,
             win: Window | None = None,
             seed: int | float | str | bytes | bytearray | None = None,
+            generation_algorithm: str = "dfs",
             ) -> None:
 
         self.__x1 = x1
@@ -29,12 +36,19 @@ class Maze:
         self.__win = win
         self.__cells: list[list[Cell]] = []
 
+        generation_algorithm = generation_algorithm.lower()
+        if generation_algorithm not in ("dfs", "bfs"):
+            raise ValueError("generation_algorithm must be 'dfs' or 'bfs'")
+
         if seed is not None:
             random.seed(seed)
-        
+
         self.__create_cells()
         self.__break_entrance_and_exit()
-        self.__break_walls_r(0, 0)
+        if generation_algorithm == "bfs":
+            self.__break_walls_bfs()
+        else:
+            self.__break_walls_r(0, 0)
         self.__reset_cells_visited()
 
     def __create_cells(self) -> None:
@@ -81,6 +95,9 @@ class Maze:
         if self.__win.is_closed():
             return
 
+        if self.__win.new_maze_requested():
+            raise MazeInterrupted()
+
         delay = self.__win.get_speed()
         if delay > 0:
             time.sleep(delay)
@@ -95,59 +112,115 @@ class Maze:
         last_cell.has_bottom_wall = False
         self.__draw_cell(self.__num_cols - 1, self.__num_rows - 1)
 
+    def __unvisited_neighbors(self, i: int, j: int) -> list[tuple[int, int]]:
+        neighbors: list[tuple[int, int]] = []
+
+        # left
+        if i > 0 and not self.__cells[i - 1][j].visited:
+            neighbors.append((i - 1, j))
+        # right
+        if i < self.__num_cols - 1 and not self.__cells[i + 1][j].visited:
+            neighbors.append((i + 1, j))
+        # up
+        if j > 0 and not self.__cells[i][j - 1].visited:
+            neighbors.append((i, j - 1))
+        # down
+        if j < self.__num_rows - 1 and not self.__cells[i][j + 1].visited:
+            neighbors.append((i, j + 1))
+
+        return neighbors
+
+    def __open_neighbors(self, i: int, j: int) -> list[tuple[int, int]]:
+        neighbors: list[tuple[int, int]] = []
+
+        # left
+        if i > 0 and not self.__cells[i][j].has_left_wall:
+            neighbors.append((i - 1, j))
+        # right
+        if i < self.__num_cols - 1 and not self.__cells[i][j].has_right_wall:
+            neighbors.append((i + 1, j))
+        # up
+        if j > 0 and not self.__cells[i][j].has_top_wall:
+            neighbors.append((i, j - 1))
+        # down
+        if j < self.__num_rows - 1 and not self.__cells[i][j].has_bottom_wall:
+            neighbors.append((i, j + 1))
+
+        return neighbors
+
+    def __remove_wall_between(
+        self,
+        i: int,
+        j: int,
+        next_i: int,
+        next_j: int,
+    ) -> None:
+        # right
+        if next_i == i + 1:
+            self.__cells[i][j].has_right_wall = False
+            self.__cells[next_i][next_j].has_left_wall = False
+        # left
+        elif next_i == i - 1:
+            self.__cells[i][j].has_left_wall = False
+            self.__cells[next_i][next_j].has_right_wall = False
+        # down
+        elif next_j == j + 1:
+            self.__cells[i][j].has_bottom_wall = False
+            self.__cells[next_i][next_j].has_top_wall = False
+        # up
+        elif next_j == j - 1:
+            self.__cells[i][j].has_top_wall = False
+            self.__cells[next_i][next_j].has_bottom_wall = False
+
     def __break_walls_r(self, i: int, j: int) -> None:
         self.__cells[i][j].visited = True
 
         while True:
-            next_index_list = []
-
-            # left
-            if i > 0 and not self.__cells[i - 1][j].visited:
-                next_index_list.append((i - 1, j))
-            # right
-            if i < self.__num_cols - 1 and not self.__cells[i + 1][j].visited:
-                next_index_list.append((i + 1, j))
-            # up
-            if j > 0 and not self.__cells[i][j - 1].visited:
-                next_index_list.append((i, j - 1))
-            # down
-            if j < self.__num_rows - 1 and not self.__cells[i][j + 1].visited:
-                next_index_list.append((i, j + 1))
+            next_index_list = self.__unvisited_neighbors(i, j)
 
             if len(next_index_list) == 0:
                 self.__draw_cell(i, j)
                 return
 
-            direction_index = random.randrange(len(next_index_list))
-            next_index = next_index_list[direction_index]
+            next_i, next_j = random.choice(next_index_list)
+            self.__remove_wall_between(i, j, next_i, next_j)
+            self.__break_walls_r(next_i, next_j)
 
-            # Knocking down the walls between the current cell and the next_index one           
-            # right
-            if next_index[0] == i + 1:
-                self.__cells[i][j].has_right_wall = False
-                self.__cells[i + 1][j].has_left_wall = False
-            # left
-            if next_index[0] == i - 1:
-                self.__cells[i][j].has_left_wall = False
-                self.__cells[i - 1][j].has_right_wall = False
-            # down
-            if next_index[1] == j + 1:
-                self.__cells[i][j].has_bottom_wall = False
-                self.__cells[i][j + 1].has_top_wall = False
-            # up
-            if next_index[1] == j - 1:
-                self.__cells[i][j].has_top_wall = False
-                self.__cells[i][j - 1].has_bottom_wall = False
+    def __break_walls_bfs(self) -> None:
+        self.__cells[0][0].visited = True
+        queue: deque[tuple[int, int]] = deque([(0, 0)])
 
-            self.__break_walls_r(next_index[0], next_index[1])
+        while queue:
+            i, j = queue.popleft()
+            next_index_list = self.__unvisited_neighbors(i, j)
+            random.shuffle(next_index_list)
+
+            for next_i, next_j in next_index_list:
+                if self.__cells[next_i][next_j].visited:
+                    continue
+
+                self.__cells[next_i][next_j].visited = True
+                self.__remove_wall_between(i, j, next_i, next_j)
+                queue.append((next_i, next_j))
+
+            self.__draw_cell(i, j)
 
     def __reset_cells_visited(self) -> None:
         for i in range(self.__num_cols):
             for j in range(self.__num_rows):
                 self.__cells[i][j].visited = False
 
-    def solve(self) -> bool:
-        return self._solve_r(0,0)
+    def solve(self, algorithm: str = "dfs") -> bool:
+        algorithm = algorithm.lower()
+        if algorithm not in ("dfs", "bfs"):
+            raise ValueError("algorithm must be 'dfs' or 'bfs'")
+
+        self.__reset_cells_visited()
+
+        if algorithm == "bfs":
+            return self.__solve_bfs()
+
+        return self._solve_r(0, 0)
 
     def _solve_r(self, i: int, j: int) -> bool:
         self.__animate()
@@ -207,3 +280,50 @@ class Maze:
                 self.__cells[i][j].draw_move(self.__cells[i][j + 1], True)
         
         return False
+
+    def __solve_bfs(self) -> bool:
+        start: tuple[int, int] = (0, 0)
+        goal: tuple[int, int] = (
+            self.__num_cols - 1,
+            self.__num_rows - 1,
+        )
+        self.__cells[0][0].visited = True
+        queue: deque[tuple[int, int]] = deque([start])
+        came_from: dict[tuple[int, int], tuple[int, int] | None] = {
+            start: None,
+        }
+
+        while queue:
+            i, j = queue.popleft()
+
+            if (i, j) == goal:
+                break
+
+            for next_i, next_j in self.__open_neighbors(i, j):
+                if self.__cells[next_i][next_j].visited:
+                    continue
+
+                self.__cells[next_i][next_j].visited = True
+                came_from[(next_i, next_j)] = (i, j)
+                self.__cells[i][j].draw_move(
+                    self.__cells[next_i][next_j],
+                    undo=True,
+                )
+                self.__animate()
+                queue.append((next_i, next_j))
+
+        if goal not in came_from:
+            return False
+
+        path: list[tuple[int, int]] = []
+        current: tuple[int, int] | None = goal
+        while current is not None:
+            path.append(current)
+            current = came_from[current]
+        path.reverse()
+
+        for (i, j), (next_i, next_j) in zip(path, path[1:]):
+            self.__cells[i][j].draw_move(self.__cells[next_i][next_j])
+            self.__animate()
+
+        return True

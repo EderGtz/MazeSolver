@@ -10,6 +10,7 @@ from tkinter import (
     Scale,
     Entry,
     Checkbutton,
+    Radiobutton,
     Button,
     BooleanVar,
     DoubleVar,
@@ -17,6 +18,7 @@ from tkinter import (
     StringVar,
     TclError,
 )
+from tkinter import messagebox
 import time
 
 
@@ -33,6 +35,8 @@ class Window:
         self.__speed_var = DoubleVar(value=0.03)
         self.__seed_var = StringVar(value="")
         self.__auto_var = BooleanVar(value=True)
+        self.__generation_var = StringVar(value="dfs")
+        self.__solving_var = StringVar(value="dfs")
 
         controls = Frame(self.__rootWidget)
         controls.pack(fill=X)
@@ -84,6 +88,49 @@ class Window:
             text="New maze",
             command=self.request_new_maze,
         ).pack(side=LEFT, padx=(8, 4))
+
+        algorithms = Frame(self.__rootWidget)
+        algorithms.pack(fill=X)
+
+        Label(algorithms, text="Generation:").pack(side=LEFT, padx=(8, 2))
+        Button(
+            algorithms,
+            text="?",
+            width=2,
+            command=self.show_generation_help,
+        ).pack(side=LEFT, padx=(0, 4))
+        Radiobutton(
+            algorithms,
+            text="DFS",
+            variable=self.__generation_var,
+            value="dfs",
+        ).pack(side=LEFT)
+        Radiobutton(
+            algorithms,
+            text="BFS",
+            variable=self.__generation_var,
+            value="bfs",
+        ).pack(side=LEFT, padx=(0, 12))
+
+        Label(algorithms, text="Solver:").pack(side=LEFT, padx=(8, 2))
+        Button(
+            algorithms,
+            text="?",
+            width=2,
+            command=self.show_solver_help,
+        ).pack(side=LEFT, padx=(0, 4))
+        Radiobutton(
+            algorithms,
+            text="DFS",
+            variable=self.__solving_var,
+            value="dfs",
+        ).pack(side=LEFT)
+        Radiobutton(
+            algorithms,
+            text="BFS",
+            variable=self.__solving_var,
+            value="bfs",
+        ).pack(side=LEFT)
 
         self.canvas = Canvas(self.__rootWidget, width=width, height=height)
         self.canvas.pack(fill=BOTH, expand=True)
@@ -142,6 +189,49 @@ class Window:
         cols = self.__get_int(self.__cols_var, 16, 1, 60)
         seed = self.__seed_var.get().strip() or None
         return rows, cols, seed
+
+    def get_generation_algorithm(self) -> str:
+        algorithm = self.__generation_var.get()
+        if algorithm not in ("dfs", "bfs"):
+            return "dfs"
+        return algorithm
+
+    def get_solving_algorithm(self) -> str:
+        algorithm = self.__solving_var.get()
+        if algorithm not in ("dfs", "bfs"):
+            return "dfs"
+        return algorithm
+
+    def show_generation_help(self) -> None:
+        messagebox.showinfo(
+            "Maze generation algorithms",
+            "DFS (recursive backtracker)\n"
+            "Carves as deep as possible before backtracking. "
+            "Produces long, winding corridors with fewer branches "
+            "and dead ends.\n\n"
+            "BFS\n"
+            "Grows the maze outward level by level using a queue. "
+            "Produces many short branches and a bushier maze, so "
+            "routes from the entrance tend to be shorter.\n\n"
+            "Both algorithms create a perfect maze: there is exactly "
+            "one path between any two cells.",
+        )
+
+    def show_solver_help(self) -> None:
+        messagebox.showinfo(
+            "Maze solving algorithms",
+            "DFS (depth-first search)\n"
+            "Dives down one path as far as possible, then backtracks "
+            "from dead ends. Gray lines show backtracked paths, and "
+            "the final solution is drawn in red.\n\n"
+            "BFS (breadth-first search)\n"
+            "Explores level by level using a queue and guarantees the "
+            "shortest path. On a perfect maze the final route is the "
+            "same as DFS, but the search spreads outward instead of "
+            "diving deep.\n\n"
+            "In both cases, explored paths are gray and the solution "
+            "is red.",
+        )
 
     @staticmethod
     def __get_int(var: IntVar, default: int, minimum: int, maximum: int) -> int:
