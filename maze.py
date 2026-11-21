@@ -29,12 +29,13 @@ class Maze:
         self.__win = win
         self.__cells: list[list[Cell]] = []
 
-        if seed:
-            self.__seed = random.seed(seed)
+        if seed is not None:
+            random.seed(seed)
         
         self.__create_cells()
         self.__break_entrance_and_exit()
         self.__break_walls_r(0, 0)
+        self.__reset_cells_visited()
 
     def __create_cells(self) -> None:
         #          cols rows
@@ -133,3 +134,8 @@ class Maze:
                 self.__cells[i][j - 1].has_bottom_wall = False
 
             self.__break_walls_r(next_index[0], next_index[1])
+
+    def __reset_cells_visited(self) -> None:
+        for i in range(self.__num_cols):
+            for j in range(self.__num_rows):
+                self.__cells[i][j].visited = False

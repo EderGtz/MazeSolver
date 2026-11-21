@@ -67,5 +67,18 @@ class Tests(unittest.TestCase):
             False,
     )
 
+    def test_maze_reset_cells_visited(self):
+        num_cols = 12
+        num_rows = 10
+        m1 = Maze(0, 0, num_rows, num_cols, 10, 10)
+
+        # The maze generator visits every cell, so they should all be reset.
+        for i in range(num_cols):
+            for j in range(num_rows):
+                self.assertEqual(
+                    m1._Maze__cells[i][j].visited,
+                    False,
+                )
+
 if __name__ == "__main__":
     unittest.main()
