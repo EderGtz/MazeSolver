@@ -15,7 +15,7 @@ class Maze:
             num_cols: int,
             cell_size_x: float,
             cell_size_y: float,
-            win: Window,
+            win: Window | None = None,
             ) -> None:
 
         self.__x1 = x1
