@@ -6,9 +6,7 @@ The maze is generated as a perfect grid maze — every cell is reachable, and th
 
 ## Demo
 
-<video src="maze.mp4" controls muted width="100%"></video>
-
-[Watch the demo video](./maze.mp4)
+![Maze Solver demo](./maze.gif)
 
 ## Features
 
@@ -91,7 +89,8 @@ python3 tests.py
 ├── cell.py       # Cell walls, visited state, and cell/path drawing
 ├── graphics.py   # Tkinter window, canvas, controls, Point, and Line
 ├── tests.py      # Unit tests
-└── maze.mp4      # Demo recording
+├── maze.gif      # Optimized demo preview
+└── maze.mp4      # Full-quality demo video
 ```
 
 ## How it works
